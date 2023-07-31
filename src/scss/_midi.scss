@@ -1,0 +1,24 @@
+.led{
+    width: 0;
+    height: 0;
+    padding: .5rem;
+    border-radius: 50%;
+    border: 1px solid rgb(154 205 50);
+    background-color: rgb(154 205 50 / 50%);
+    transition: background-color 100ms linear;
+
+    &.on{
+        background-color: rgb(154 205 50);
+        box-shadow: 0 0 1rem rgb(154 205 50 / 85%);
+    }
+}
+
+input[type=range]{
+    width: 20rem;
+}
+
+output[for=progress] {
+    display: block;
+    width: 5ch;
+    height: 2rem;
+}
