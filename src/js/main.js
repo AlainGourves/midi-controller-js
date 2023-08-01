@@ -8,7 +8,6 @@ let isControllerActive = false;
 
 const led = document.querySelector('.led');
 const btnActivate = document.querySelector('#activate');
-const btnLog = document.querySelector('#ports');
 
 const range = document.querySelector('#progress');
 const rangeOutput = document.querySelector('output[for=progress]');
@@ -20,7 +19,6 @@ function onMIDISuccess(midiAccess) {
         // Print information about the (dis)connected MIDI controller
         // affiche un message quand l'arduino est conecté/déconnecté
         // console.log('statechange', event.port.type, event.port.state, event.port.id, event.port.name);
-        clPorts()
         const id = event.port.id;
         const type = event.port.type; // 'input'|'output'
         if (type === 'input') {
@@ -30,28 +28,12 @@ function onMIDISuccess(midiAccess) {
     };
     // listInputsAndOutputs(midi);
 
-    clPorts()
-    // console.log('sysex', midi.sysexEnabled); SysEx are disabled by default
+    console.log('sysex', midi.sysexEnabled); // SysEx are disabled by default
 
     midi.inputs.forEach((entry) => {
         entry.onmidimessage = onMIDIMessage;
     });
     console.log("MIDI ready!");
-}
-
-function clPorts() {
-    console.log("Dans midi:");
-    midi.inputs.forEach((port) => {
-        if (port) {
-            console.log('input', port);
-        }
-    });
-    midi.outputs.forEach((port) => {
-        if (port) {
-            console.log('output', port);
-        }
-    });
-    console.log("------------");
 }
 
 function onMIDIFailure(msg) {
@@ -164,7 +146,6 @@ window.addEventListener("load", e => {
     navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
 
     btnActivate.addEventListener('click', activateController);
-    btnLog.addEventListener('click', clPorts);
     range.addEventListener('change', updateRangeOutput);
     changeRangeValue(initialValue);
 });
