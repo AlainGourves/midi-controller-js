@@ -18,17 +18,22 @@ function onMIDISuccess(midiAccess) {
     midi.onstatechange = (event) => {
         // Print information about the (dis)connected MIDI controller
         // affiche un message quand l'arduino est conecté/déconnecté
-        // console.log('statechange', event.port.type, event.port.state, event.port.id, event.port.name);
+         console.log('statechange', event.port.type, event.port.state, event.port.id, event.port.name);
         const id = event.port.id;
         const type = event.port.type; // 'input'|'output'
         if (type === 'input') {
             const newInput = midi.inputs.get(id);
             if (newInput && !newInput.onmidimessage && newInput.state === 'connected') newInput.onmidimessage = onMIDIMessage;
         }
+        // Handle disconnection
+        if (event.port.state === 'disconnected' && isControllerActive) {
+            isControllerActive = false;
+            handleState(isControllerActive);
+        }
+        listInputsAndOutputs(midi);
     };
     // listInputsAndOutputs(midi);
-
-    console.log('sysex', midi.sysexEnabled); // SysEx are disabled by default
+    //console.log('sysex', midi.sysexEnabled); // SysEx are disabled by default
 
     midi.inputs.forEach((entry) => {
         entry.onmidimessage = onMIDIMessage;
@@ -49,14 +54,14 @@ function listInputsAndOutputs(midiAccess) {
             ` id:'${input.id}'` +
             ` manufacturer:'${input.manufacturer}'` +
             ` name:'${input.name}'` +
-            ` version:'${input.version}'`,
+            ` state:'${input.state}'`,
         );
     }
 
     for (const entry of midiAccess.outputs) {
         const output = entry[1];
         console.log(
-            `Output port [type:'${output.type}'] id:'${output.id}' manufacturer:'${output.manufacturer}' name:'${output.name}' version:'${output.version}'`,
+            `Output port [type:'${output.type}'] id:'${output.id}' manufacturer:'${output.manufacturer}' name:'${output.name}' state:'${output.state}'`,
         );
     }
 }
@@ -121,6 +126,16 @@ const updateRangeOutput = () => {
     rangeOutput.textContent = range.value;
 }
 
+const handleState = (state) => {
+    if (state) {
+        btnActivate.textContent = "Desactivate";
+        led.classList.add('on');
+    }else{
+        btnActivate.textContent = "Activate";
+        led.classList.remove('on');
+    }
+}
+
 const activateController = (ev) => {
     const output = midi.outputs.get(midi.outputs.keys().next().value);
     if (midi && output) {
@@ -129,13 +144,10 @@ const activateController = (ev) => {
         let message = [0xB0, 0x14]; // control change channel 1 | controller #20
         if (isControllerActive) {
             message.push(0xF); // value 15 to activate
-            btnActivate.textContent = "Desactivate";
-            led.classList.add('on');
         } else {
             message.push(0x0); // value 0 to desactivate
-            btnActivate.textContent = "Activate";
-            led.classList.remove('on');
         }
+        handleState(isControllerActive);
         output.send(message);
     } else {
         console.log("Nothing MIDI for the time being!");
