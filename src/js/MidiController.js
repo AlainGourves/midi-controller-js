@@ -10,7 +10,7 @@ class MIDIController {
         // TODO: verif que channel est dans [1,16]
 
         this.midi = null;
-        this.isActive = false;
+        this._isActive = false;
 
         this._target.addEventListener('change', (ev) =>{
             this._value = this.checkValue(ev.target.value);
@@ -31,11 +31,26 @@ class MIDIController {
     }
 
     activate() {
-        const output = this.midi.outputs.get(this.midi.outputs.keys().next().value);
+        const filterOutputs = (outputMap) => {
+            let result = null;
+            outputMap.forEach(output =>{
+                const name= output.name;
+                if (name.search(/arduino/i) !== -1) {
+                    result = output;
+                }
+            });
+            return result;
+        }
+        const output = filterOutputs(this.midi.outputs);
+
+        // const output = this.midi.outputs.get(this.midi.outputs.keys().next().value);
+        // this.midi.outputs.forEach(output =>{
+        //     const name= output.name;
+        // });
         if (this.midi && output) {
-            this.isActive = !this.isActive;
+            this._isActive = !this._isActive;
             let message = [0xB0 + (this._channel - 1), 0x14]; // control change (add channel in LSB) | controller #20
-            if (this.isActive) {
+            if (this._isActive) {
                 message.push(0x20); // value (decimal 32) to activate
             } else {
                 message.push(0x30); // value (decimal 48) to desactivate
@@ -54,15 +69,19 @@ class MIDIController {
             // Print information about the (dis)connected MIDI controller
             // affiche un message quand l'arduino est conecté/déconnecté
             console.log('statechange', event.port.type, event.port.state, event.port.id, event.port.name);
-            const id = event.port.id;
-            const type = event.port.type; // 'input'|'output'
-            if (type === 'input') {
-                const newInput = this.midi.inputs.get(id);
-                if (newInput && !newInput.onmidimessage && newInput.state === 'connected') newInput.onmidimessage = this.onMIDIMessage.bind(this);
-            }
-            // Handle disconnection
-            if (event.port.state === 'disconnected' && this.isActive) {
-                this.isActive = false;
+            const name = event.port.name;
+            if (name.search(/arduino/i) !== -1) {
+                // filters only Arduino messages
+                const id = event.port.id;
+                const type = event.port.type; // 'input'|'output'
+                if (type === 'input') {
+                    const newInput = this.midi.inputs.get(id);
+                    if (newInput && !newInput.onmidimessage && newInput.state === 'connected') newInput.onmidimessage = this.onMIDIMessage.bind(this);
+                }
+                // Handle disconnection
+                if (event.port.state === 'disconnected' && this._isActive) {
+                    this._isActive = false;
+                }
             }
         };
 
@@ -129,6 +148,10 @@ class MIDIController {
         if (val < this._MIN) val = this._MIN;
         if (val > this._MAX) val = this._MAX;
         return val;
+    }
+
+    isActive() {
+        return this._isActive;
     }
 }
 
