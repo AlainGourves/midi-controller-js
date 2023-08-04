@@ -14,6 +14,16 @@ const updateRangeOutput = () => {
     rangeOutput.textContent = range.value;
 }
 
+const handleBtnState = (state) => {
+    if (state) {
+        btnActivate.textContent = "Desactivate";
+        led.classList.add('on');
+    } else {
+        btnActivate.textContent = "Activate";
+        led.classList.remove('on');
+    }
+}
+
 window.addEventListener("load", async e => {
     controller = new MIDIController(
         range,
@@ -26,10 +36,12 @@ window.addEventListener("load", async e => {
     await controller.init();
     controller.activate();
     updateRangeOutput();
+    handleBtnState(controller.isActive())
 
     range.addEventListener('change', updateRangeOutput);
 
-    btnActivate.addEventListener('click', (ev) =>{
+    btnActivate.addEventListener('click', (ev) => {
         controller.activate();
+        handleBtnState(controller.isActive())
     })
 });
