@@ -1,8 +1,8 @@
 class MIDIController {
 
-    constructor(target, initialValue, channel = 1, MIN = 0, MAX = 100) {
+    constructor(target, initialValue, MIN = 0, MAX = 100) {
         this._target = target;
-        this._initialValue = initialValue;
+        this._initialValue = initialValue || Math.floor((MAX - MIN)/2);
         this._value = this.checkValue(initialValue);
         this._MIN = MIN;
         this._MAX = MAX;

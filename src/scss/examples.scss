@@ -1,0 +1,51 @@
+@import 'mixins';
+@import 'base';
+
+:root {
+    --m: 1rem;
+    font-family: system-ui, sans-serif;
+}
+
+body,
+.wrapper {
+    @include grid-center;
+}
+
+.wrapper {
+    @include flex-center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    container-type: inline-size;
+    width: 50vw;
+    max-width: calc(100% - var(--m)*2);
+    padding: calc(var(--m)*2);
+    border: 1px solid hsl(125, 55%, 48%);
+    border-radius: var(--m);
+    background: #a8e6ad;
+}
+
+.status {
+    position: fixed;
+    max-width: calc(100% - var(--m)*2);
+    min-width: 18rem;
+    min-height: 3rem;
+    max-height: 20vh;
+    max-height: 20dvh;
+    overflow: auto;
+    bottom: var(--m, 0);
+    left: 50%;
+    translate: -50% 0;
+    font-family: monospace, sans-serif;
+    border: 1px solid green;
+    background-color: #d0d9e2;
+}
+
+#progress {
+    width: calc(75cqw - 2*var(--m));
+    min-width: calc(100% - 2*var(--m));
+}
+
+output {
+    width: 4ch;
+    text-align: right;
+}

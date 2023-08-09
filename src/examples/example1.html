@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="../scss/examples.scss">
+</head>
+
+<body>
+
+    <div class="wrapper">
+        <input type="range" id="progress" min="0" max="255" value="24">
+        <output for="progress"></output>
+    </div>
+
+    <div class="status">
+
+    </div>
+
+    <script type="module">
+        import MIDIController from '../js/MidiController.js'
+
+        let controller;
+
+        const range = document.querySelector('#progress');
+        const rangeMin = parseInt(range.min);
+        const rangeMax = parseInt(range.max);
+        const rangeOutput = document.querySelector('output[for=progress]');
+
+        const updateRangeOutput = () => {
+            rangeOutput.textContent = range.value;
+        }
+
+
+        window.addEventListener("load", async e => {
+            controller = new MIDIController(
+                range,
+                null,
+                // range.value,
+                rangeMin,
+                rangeMax
+            );
+            await controller.init();
+            updateRangeOutput();
+
+            range.addEventListener('change', updateRangeOutput);
+        });
+    </script>
+</body>
+
+</html>

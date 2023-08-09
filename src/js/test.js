@@ -29,7 +29,6 @@ window.addEventListener("load", async e => {
     controller = new MIDIController(
         range,
         range.value,
-        1,
         rangeMin,
         rangeMax
     );
