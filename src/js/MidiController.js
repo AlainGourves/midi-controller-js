@@ -6,14 +6,14 @@ class MIDIController {
         this._value = this.checkValue(initialValue);
         this._MIN = MIN;
         this._MAX = MAX;
-        this._channel = channel;
+        this._channel = 0;
         // TODO: verif que channel est dans [1,16]
 
         this.midi = null;
         this._isActive = false;
 
-        this._target.addEventListener('change', (ev) =>{
-            this._value = this.checkValue(ev.target.value);
+        this._target.addEventListener('change', (ev) => {
+            this.value = ev.target.value;
         })
         //this.init()//.then(this.activate.bind(this));
     }
@@ -30,36 +30,50 @@ class MIDIController {
         await navigator.requestMIDIAccess().then(this.onMIDISuccess.bind(this), this.onMIDIFailure.bind(this));
     }
 
-    activate() {
-        const filterOutputs = (outputMap) => {
-            let result = null;
-            outputMap.forEach(output =>{
-                const name= output.name;
-                if (name.search(/arduino/i) !== -1) {
-                    result = output;
-                }
-            });
-            return result;
-        }
-        const output = filterOutputs(this.midi.outputs);
-
-        // const output = this.midi.outputs.get(this.midi.outputs.keys().next().value);
-        // this.midi.outputs.forEach(output =>{
-        //     const name= output.name;
-        // });
-        if (this.midi && output) {
-            this._isActive = !this._isActive;
-            let message = [0xB0 + (this._channel - 1), 0x14]; // control change (add channel in LSB) | controller #20
-            if (this._isActive) {
-                message.push(0x20); // value (decimal 32) to activate
-            } else {
-                message.push(0x30); // value (decimal 48) to desactivate
+    filterIOs(entries) {
+        let result = null;
+        entries.forEach(entry => {
+            const name = entry.name;
+            if (name.search(/arduino/i) !== -1) {
+                result = entry;
             }
-            //console.log(message);
-            output.send(message);
+        });
+        return result;
+    }
+
+    askChannel() {
+        let message = [0xB0, 0x14, 0x10];
+        // 0xB0 (decimal 176) control change
+        // 0x14 (decimal 20) controller #20
+        // 0x10 (decimal 16) to ask for a channel number
+        this.sendMsg(message);
+    }
+
+    sendMsg(msg) {
+        const output = this.filterIOs(this.midi.outputs);
+        if (this.midi && output) {
+            // add channel in LSB to command
+            msg[0] += this._channel;
+            output.send(msg);
         } else {
             console.log("Nothing MIDI for the time being!");
         }
+    }
+
+    activate() {
+        this._isActive = true;
+        // control change, controller #20
+        // value (decimal 36) to desactivate
+        let message = [0xB0, 0x14, 0x20];
+        this.sendMsg(message);
+    }
+
+    desactivate() {
+        this._isActive = false;
+        // control change, controller #20
+        // value (decimal 48) to desactivate
+        let message = [0xB0, 0x14, 0x30];
+        this.sendMsg(message);
     }
 
     onMIDISuccess(midiAccess) {
@@ -67,7 +81,6 @@ class MIDIController {
 
         this.midi.onstatechange = (event) => {
             // Print information about the (dis)connected MIDI controller
-            // affiche un message quand l'arduino est conecté/déconnecté
             console.log('statechange', event.port.type, event.port.state, event.port.id, event.port.name);
             const name = event.port.name;
             if (name.search(/arduino/i) !== -1) {
@@ -88,6 +101,13 @@ class MIDIController {
         this.midi.inputs.forEach((entry) => {
             entry.onmidimessage = this.onMIDIMessage.bind(this);
         });
+
+        window.addEventListener('pagehide', (event) => {
+            // sends a message to desactivate the controller when the user is about to leave the page
+            this.desactivate();
+        });
+
+        this.askChannel();
         console.log("MIDI ready!");
     }
 
@@ -105,42 +125,42 @@ class MIDIController {
         // 4 premier bits -> type du message, 4 derniers bits -> channel
         const command = event.data[0] & 0xF0;
         const channel = event.data[0] & 0xF;  // TODO: gestion du channel (filtrer les msgs)
-        console.log("reçu sur channel:", channel, "val:", event.data[2]);
-        const commands = {
-            0x80: 'Note On',
-            0x90: 'Note Off',
-            0xB0: 'Control Change'
-        }
+        console.log("reçu sur channel:", channel, "command:", event.data[1], "val:", event.data[2]);
 
-        if (command === 0xB0) {
-            const control = event.data[1];
-            if (control === 21) {
-                const val = event.data[2];
-                switch (val) {
-                    case 1:
-                        this._value += 1;
-                        break;
-                    case 3:
-                        this._value -= 1;
-                        break;
-                    case 10:
-                        this._value += 10;
-                        break;
-                    case 30:
-                        this._value -= 10;
-                        break;
+            if (command === 0xB0) {
+                const control = event.data[1];
+                const val = event.data[2] || null;
+                if (control === 20) {
+                    // response to askChannel()
+                    this._channel = channel;
+                    if (!this._isActive) this.activate();
                 }
-                this._value = this.checkValue(this._value);
+                if (control === 21 && channel === this._channel) {
+                    switch (val) {
+                        case 1:
+                            this._value += 1;
+                            break;
+                        case 3:
+                            this._value -= 1;
+                            break;
+                        case 10:
+                            this._value += 10;
+                            break;
+                        case 30:
+                            this._value -= 10;
+                            break;
+                    }
+                    this.value = this._value;
+                }
+                if (control === 22 && channel === this._channel) {
+                    // Reset range value to initialValue
+                    this.value = this._initialValue;
+                }
             }
-            if (control === 22) {
-                // Reset range value to initialValue
-                this._value = this._initialValue;
-            }
-        }
-        this._target.value = this._value;
-        // target emits a 'change' event
-        const evt = new Event('change', {bubbles: true});
-        this._target.dispatchEvent(evt);
+            this._target.value = this.value;
+            // target emits a 'change' event
+            const evt = new Event('change', { bubbles: true });
+            this._target.dispatchEvent(evt);
     }
 
     checkValue(val) {

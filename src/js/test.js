@@ -14,7 +14,8 @@ const updateRangeOutput = () => {
     rangeOutput.textContent = range.value;
 }
 
-const handleBtnState = (state) => {
+const handleBtnState = () => {
+    const state = controller.isActive();
     if (state) {
         btnActivate.textContent = "Desactivate";
         led.classList.add('on');
@@ -34,14 +35,15 @@ window.addEventListener("load", async e => {
     );
     window.controller = controller;
     await controller.init();
-    controller.activate();
+ //   controller.askChannel();
+    // controller.activate();
     updateRangeOutput();
-    handleBtnState(controller.isActive())
+    handleBtnState()
 
     range.addEventListener('change', updateRangeOutput);
 
     btnActivate.addEventListener('click', (ev) => {
-        controller.activate();
-        handleBtnState(controller.isActive())
+        (controller.isActive()) ? controller.desactivate() : controller.activate();
+        handleBtnState()
     })
 });
