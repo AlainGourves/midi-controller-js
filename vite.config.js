@@ -1,6 +1,7 @@
 // vite.config.js
 /** @type {import('vite').UserConfig} */
 import legacy from '@vitejs/plugin-legacy'
+import { resolve } from 'path'
 
 export default {
     // config options
@@ -27,5 +28,11 @@ export default {
         emptyOutDir: true,
         outDir: '../dist',
         sourcemap: true,
+        rollupOptions: {
+            input: {
+                main: resolve(__dirname, 'src/index.html'),
+                nested: resolve(__dirname, 'src/examples/example1.html'),
+            },
+        },
     }
 }
