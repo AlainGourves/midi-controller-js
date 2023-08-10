@@ -12,11 +12,13 @@
 
     <div class="wrapper">
         <div class="box"></div>
+        MIDI controller drives the Red channel of the square's background color via a CSS custom property.
     </div>
 
-    <div class="status">
-
-    </div>
+    <section class="status">
+        <header>MIDI Messages</header>
+        <div class="messages"></div>
+    </section>
 
     <script type="module">
         import MIDIController from '../js/MidiController.js'
@@ -25,8 +27,8 @@
 
         const box = document.querySelector('.box');
 
-        const status = document.querySelector('.status');
-        status.addEventListener('myevent', (ev) => {
+        const status = document.querySelector('.status .messages');
+        status.addEventListener('submsg', (ev) => {
             status.innerHTML += `<p>${ev.detail.msg}</p>`;
             status.scrollTop = status.scrollHeight;
         })
@@ -36,9 +38,8 @@
             controller.subscribe(status);
             await controller.init();
 
-            box.addEventListener('change', (ev) => {
-                console.log(ev.target.value);
-                const newR = ev.target.value;
+            box.addEventListener('midichange', (ev) => {
+                const newR = ev.detail.value;
                 document.documentElement.style.setProperty('--r', newR)
             })
         });

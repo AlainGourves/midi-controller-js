@@ -2,13 +2,11 @@ class MIDIController {
 
     constructor(target, initialValue, MIN = 0, MAX = 100) {
         this._target = target;
-        console.log('initialValue', initialValue);
         this._initialValue = (initialValue !== null) ? initialValue : Math.floor((MAX - MIN) / 2);
         this._value = this.checkValue(initialValue);
         this._MIN = MIN;
         this._MAX = MAX;
         this._channel = 0;
-        // TODO: verif que channel est dans [1,16]
 
         this._subscribers = [];
 
@@ -16,8 +14,12 @@ class MIDIController {
         this._isActive = false;
 
         this._target.addEventListener('change', (ev) => {
-            ev.target.value = this._value;
+            // update this._value when it's modified from "outside"
+            if( ev.target.value !== this._value) {
+                this._value = this.checkValue(ev.target.value);
+            }
         })
+
         //this.init()//.then(this.activate.bind(this));
     }
 
@@ -26,17 +28,14 @@ class MIDIController {
     }
 
     publish(payload) {
-        if (this._subscribers.length){
+        if (this._subscribers.length) {
             this._subscribers.forEach(subscriber => {
-                const evt = new CustomEvent("myevent", {
+                const evt = new CustomEvent("submsg", {
                     detail: payload,
-                    bubbles: true,
-                    cancelable: true,
-                    composed: false,
                 });
                 subscriber.dispatchEvent(evt);
             });
-        }else{
+        } else {
             console.log(payload);
         }
     }
@@ -187,9 +186,13 @@ class MIDIController {
                 this.value = this._initialValue;
             }
         }
-        this._target.value = this.value;
-        // target emits a 'change' event
-        const evt = new Event('change', { bubbles: true });
+        // this._target.value = this.value;
+        // target emits a custom 'midichange' event
+        const evt = new CustomEvent('midichange', {
+            detail: {
+                value: this.value,
+            }
+        });
         this._target.dispatchEvent(evt);
     }
 

@@ -50,14 +50,13 @@ body,
         padding-inline: var(--m);
     }
 
-    &::before{
+    & header{
         position: sticky;
-        content: 'MIDI Messages';
         left: 0;
         top: 0;
         padding-inline: .5em;
         padding-block: .25em;
-        background-color: deeppink;
+        background-color: rgba(255, 20, 145, 0.75);
     }
 }
 

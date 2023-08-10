@@ -15,9 +15,10 @@
         <output for="progress"></output>
     </div>
 
-    <div class="status">
-
-    </div>
+    <section class="status">
+        <header>MIDI Messages</header>
+        <div class="messages"></div>
+    </section>
 
     <script type="module">
         import MIDIController from '../js/MidiController.js'
@@ -29,16 +30,20 @@
         const rangeMax = parseInt(range.max);
         const rangeOutput = document.querySelector('output[for=progress]');
 
-        const status = document.querySelector('.status');
-        status.addEventListener('myevent', (ev) =>{
+        const status = document.querySelector('.status .messages');
+        status.addEventListener('submsg', (ev) =>{
             status.innerHTML += `<p>${ev.detail.msg}</p>`;
             status.scrollTop = status.scrollHeight;
         })
 
+        const updateRange = (ev) => {
+            range.value = ev.detail.value;;
+            updateRangeOutput();
+        }
+
         const updateRangeOutput = () => {
             rangeOutput.textContent = range.value;
         }
-
 
         window.addEventListener("load", async e => {
             controller = new MIDIController(
@@ -47,12 +52,14 @@
                 rangeMin,
                 rangeMax
             );
+            controller.subscribe(status);
             await controller.init();
+
             updateRangeOutput();
 
-            controller.subscribe(status);
+            range.addEventListener('midichange', updateRange);
 
-            range.addEventListener('change', updateRangeOutput);
+            range.addEventListener('input', updateRangeOutput);
         });
     </script>
 </body>
