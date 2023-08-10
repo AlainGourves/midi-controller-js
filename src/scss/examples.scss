@@ -4,11 +4,21 @@
 :root {
     --m: 1rem;
     font-family: system-ui, sans-serif;
+    --r: 0;
+    --g: 66;
+    --b: 96;
 }
 
 body,
 .wrapper {
     @include grid-center;
+    line-height: 1.5;
+}
+
+.wrapper,
+.status {
+    width: 75vw;
+    min-width: 18rem;
 }
 
 .wrapper {
@@ -16,8 +26,6 @@ body,
     flex-wrap: wrap;
     gap: 0.5rem;
     container-type: inline-size;
-    width: 50vw;
-    max-width: calc(100% - var(--m)*2);
     padding: calc(var(--m)*2);
     border: 1px solid hsl(125, 55%, 48%);
     border-radius: var(--m);
@@ -26,8 +34,6 @@ body,
 
 .status {
     position: fixed;
-    max-width: calc(100% - var(--m)*2);
-    min-width: 18rem;
     min-height: 3rem;
     max-height: 20vh;
     max-height: 20dvh;
@@ -36,16 +42,40 @@ body,
     left: 50%;
     translate: -50% 0;
     font-family: monospace, sans-serif;
-    border: 1px solid green;
+    font-size: .75em;
+    border: 1px solid #91a4ba;
     background-color: #d0d9e2;
+
+    & > p{
+        padding-inline: var(--m);
+    }
+
+    &::before{
+        position: sticky;
+        content: 'MIDI Messages';
+        left: 0;
+        top: 0;
+        padding-inline: .5em;
+        padding-block: .25em;
+        background-color: deeppink;
+    }
 }
 
+// Example #1 ----------------
 #progress {
     width: calc(75cqw - 2*var(--m));
-    min-width: calc(100% - 2*var(--m));
 }
 
 output {
     width: 4ch;
     text-align: right;
+}
+
+// Example #2 ----------------
+
+.box {
+    width: 50%;
+    width: 50cqw;
+    aspect-ratio: 1;
+    background-color: rgb(var(--r) var(--g) var(--b));
 }

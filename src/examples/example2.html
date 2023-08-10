@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="../scss/examples.scss">
+</head>
+
+<body>
+
+    <div class="wrapper">
+        <div class="box"></div>
+    </div>
+
+    <div class="status">
+
+    </div>
+
+    <script type="module">
+        import MIDIController from '../js/MidiController.js'
+
+        let controller;
+
+        const box = document.querySelector('.box');
+
+        const status = document.querySelector('.status');
+        status.addEventListener('myevent', (ev) => {
+            status.innerHTML += `<p>${ev.detail.msg}</p>`;
+            status.scrollTop = status.scrollHeight;
+        })
+
+        window.addEventListener("load", async e => {
+            controller = new MIDIController(box, 0, 0, 255);
+            controller.subscribe(status);
+            await controller.init();
+
+            box.addEventListener('change', (ev) => {
+                console.log(ev.target.value);
+                const newR = ev.target.value;
+                document.documentElement.style.setProperty('--r', newR)
+            })
+        });
+    </script>
+</body>
+
+</html>

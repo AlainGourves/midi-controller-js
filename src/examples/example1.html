@@ -29,6 +29,12 @@
         const rangeMax = parseInt(range.max);
         const rangeOutput = document.querySelector('output[for=progress]');
 
+        const status = document.querySelector('.status');
+        status.addEventListener('myevent', (ev) =>{
+            status.innerHTML += `<p>${ev.detail.msg}</p>`;
+            status.scrollTop = status.scrollHeight;
+        })
+
         const updateRangeOutput = () => {
             rangeOutput.textContent = range.value;
         }
@@ -37,13 +43,14 @@
         window.addEventListener("load", async e => {
             controller = new MIDIController(
                 range,
-                null,
-                // range.value,
+                range.value,
                 rangeMin,
                 rangeMax
             );
             await controller.init();
             updateRangeOutput();
+
+            controller.subscribe(status);
 
             range.addEventListener('change', updateRangeOutput);
         });
