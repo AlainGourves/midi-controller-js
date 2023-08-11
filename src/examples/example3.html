@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="../scss/examples.scss">
+</head>
+
+<body>
+
+    <div class="wrapper">
+        <div class="gauge">
+            <div class="value">0</div>
+            <div class="pointer"></div>
+            <div class="gauge_bg"></div>
+        </div>
+    </div>
+
+    <div class="status">
+
+    </div>
+
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" width="0" height="0">
+        <defs>
+            <clipPath id="gauge" clipPathUnits = "objectBoundingBox">
+              <path fill="#fff" d="M.84.16a.48.48 0 0 0-.68 0A.48.48 0 0 0 .02.5a.48.48 0 0 0 .14.34.05.05 0 1 0 .08-.08A.37.37 0 0 1 .13.5a.37.37 0 0 1 .1-.26.37.37 0 0 1 .53 0 .37.37 0 0 1 .08.4.37.37 0 0 1-.08.12.05.05 0 1 0 .08.08A.48.48 0 0 0 .98.5.48.48 0 0 0 .84.16Z"/>
+            </clipPath>
+          </defs>
+      </svg>
+
+    <script type="module">
+        import MIDIController from '../js/MidiController.js'
+
+        let controller;
+
+        const gauge = document.querySelector('.gauge');
+        const pointer = gauge.querySelector('.pointer');
+        const gaugeValue = gauge.querySelector('.value');
+
+        const status = document.querySelector('.status');
+        status.addEventListener('submsg', (ev) => {
+            status.innerHTML += `<p>${ev.detail.msg}</p>`;
+            status.scrollTop = status.scrollHeight;
+        })
+
+        window.addEventListener("load", async e => {
+            controller = new MIDIController(gauge, 0, 0, 100);
+            controller.subscribe(status);
+            await controller.init();
+
+            gauge.addEventListener('midichange', (ev) => {
+                const newValue = ev.detail.value;
+                const angle = `${(270/100)*newValue}deg`;
+                gaugeValue.textContent = newValue;
+                document.documentElement.style.setProperty('--theta', angle)
+            })
+        });
+    </script>
+</body>
+
+</html>
