@@ -49,7 +49,15 @@ class MIDIController {
     }
 
     async init() {
-        await navigator.requestMIDIAccess().then(this.onMIDISuccess.bind(this), this.onMIDIFailure.bind(this));
+        try{
+            await navigator.requestMIDIAccess().then(this.onMIDISuccess.bind(this), this.onMIDIFailure.bind(this));
+        }catch(err){
+            const msg = `<b>Web MIDI API not supported by the browser!</b><br>${err.message}`;
+            this.publish({
+                type: 'error',
+                msg
+             });
+        }
     }
 
     filterIOs(entries) {
@@ -78,8 +86,11 @@ class MIDIController {
             msg[0] += this._channel;
             output.send(msg);
         } else {
-            const msg = "Nothing MIDI for the time being!";
-            this.publish({ msg });
+            const msg = "<b>No MIDI Controller connected</b>";
+            this.publish({
+                type: 'alert',
+                msg
+             });
         }
     }
 
@@ -89,7 +100,7 @@ class MIDIController {
         // value (decimal 36) to desactivate
         let message = [0xB0, 0x14, 0x20];
         this.sendMIDIMsg(message);
-        const msg = "MIDI ready!";
+        const msg = "<b>MIDI ready!</b>";
         this.publish({ msg });
     }
 
@@ -137,9 +148,11 @@ class MIDIController {
     }
 
     onMIDIFailure(msg) {
-        const message = `Failed to get MIDI access - ${msg}`;
-        this.publish({ 'msg': message });
-        console.error(`Failed to get MIDI access - ${msg}`);
+        const message = `<b>Failed to get MIDI access</b> - ${msg}`;
+        this.publish({
+            type: 'error',
+            'msg': message
+         });
     }
 
     // Handling MIDI Iputs

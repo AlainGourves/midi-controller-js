@@ -43,11 +43,17 @@
 
         const status = document.querySelector('.status');
         status.addEventListener('submsg', (ev) => {
-            status.innerHTML += `<p>${ev.detail.msg}</p>`;
+            const myClass = (ev.detail.type) ? ` class="${ev.detail.type}"` : '';
+            status.innerHTML += `<p${myClass}>${ev.detail.msg}</p>`;
             status.scrollTop = status.scrollHeight;
         })
 
         window.addEventListener("load", async e => {
+            if ("requestMIDIAccess" in navigator) {
+
+            } else {
+                console.log("Bord d'Hell !");
+            }
             controller = new MIDIController(gauge, 0, 0, 100);
             controller.subscribe(status);
             await controller.init();

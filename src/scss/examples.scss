@@ -45,11 +45,21 @@ body,
     translate: -50% 0;
     font-family: monospace, sans-serif;
     font-size: .75em;
+    line-height: 1.2;
+    color: #46494d;
     border: 1px solid #91a4ba;
     background-color: #d0d9e2;
 
     &>p {
         padding-inline: var(--m);
+
+        &.alert{
+            color: #cc7402;
+        }
+
+        &.error{
+            color: #c12616;
+        }
     }
 
     & header{
@@ -100,7 +110,17 @@ output {
     background-image:
     repeating-conic-gradient(from -135deg,#fff3 0 1deg, transparent 1deg 27deg),
     repeating-conic-gradient(from -135deg,#ffffff10 0 1deg, transparent 1deg 13.5deg),
-    conic-gradient(from -135deg, #feae2e, #b40ad5 270deg, transparent 0),
+    conic-gradient(from -135deg,
+    #feaf2f,
+    #ff962e,
+    #ff813d,
+    #ff644d,
+    #ff425b,
+    #ff1472,
+    #ff008c,
+    #fa00a7,
+    #db00be,
+    #b40ad6 270deg, transparent 0),
     conic-gradient(from -180deg, #feae2e 45deg, transparent 46deg 315deg, #b40ad5 0)
     ;
     clip-path: url(#gauge);
