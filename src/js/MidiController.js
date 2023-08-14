@@ -10,12 +10,16 @@ class MIDIController {
 
         this._subscribers = [];
 
+        this.timer;
+        this.activeSensingPeriod = 1000;
+        this.raf; // requestAnimationFrame reference
+
         this.midi = null;
         this._isActive = false;
 
         this._target.addEventListener('change', (ev) => {
             // update this._value when it's modified from "outside"
-            if( ev.target.value !== this._value) {
+            if (ev.target.value !== this._value) {
                 this._value = this.checkValue(ev.target.value);
             }
         })
@@ -49,15 +53,41 @@ class MIDIController {
     }
 
     async init() {
-        try{
+        try {
             await navigator.requestMIDIAccess().then(this.onMIDISuccess.bind(this), this.onMIDIFailure.bind(this));
-        }catch(err){
+        } catch (err) {
             const msg = `<b>Web MIDI API not supported by the browser!</b><br>${err.message}`;
             this.publish({
                 type: 'error',
                 msg
-             });
+            });
         }
+    }
+
+    askChannel() {
+        const message = [0xB0, 0x14, 0x10];
+        // 0xB0 (decimal 176) control change
+        // 0x14 (decimal 20) controller #20
+        // 0x10 (decimal 16) to ask for a channel number
+        this.sendMIDIMsg(message);
+    }
+
+    activate() {
+        this._isActive = true;
+        // control change, controller #20
+        // value (decimal 36) to activate
+        const message = [0xB0, 0x14, 0x20];
+        this.sendMIDIMsg(message);
+        const msg = "<b>MIDI ready!</b>";
+        this.publish({ msg });
+    }
+
+    desactivate() {
+        this._isActive = false;
+        // control change, controller #20
+        // value (decimal 48) to desactivate
+        const message = [0xB0, 0x14, 0x30];
+        this.sendMIDIMsg(message);
     }
 
     filterIOs(entries) {
@@ -71,45 +101,21 @@ class MIDIController {
         return result;
     }
 
-    askChannel() {
-        let message = [0xB0, 0x14, 0x10];
-        // 0xB0 (decimal 176) control change
-        // 0x14 (decimal 20) controller #20
-        // 0x10 (decimal 16) to ask for a channel number
-        this.sendMIDIMsg(message);
-    }
-
     sendMIDIMsg(msg) {
         const output = this.filterIOs(this.midi.outputs);
         if (this.midi && output) {
             // add channel in LSB to command
             msg[0] += this._channel;
             output.send(msg);
+            // reinit timer
+            this.timer = Date.now();
         } else {
             const msg = "<b>No MIDI Controller connected</b>";
             this.publish({
                 type: 'alert',
                 msg
-             });
+            });
         }
-    }
-
-    activate() {
-        this._isActive = true;
-        // control change, controller #20
-        // value (decimal 36) to desactivate
-        let message = [0xB0, 0x14, 0x20];
-        this.sendMIDIMsg(message);
-        const msg = "<b>MIDI ready!</b>";
-        this.publish({ msg });
-    }
-
-    desactivate() {
-        this._isActive = false;
-        // control change, controller #20
-        // value (decimal 48) to desactivate
-        let message = [0xB0, 0x14, 0x30];
-        this.sendMIDIMsg(message);
     }
 
     onMIDISuccess(midiAccess) {
@@ -127,6 +133,11 @@ class MIDIController {
                 if (type === 'input') {
                     const newInput = this.midi.inputs.get(id);
                     if (newInput && !newInput.onmidimessage && newInput.state === 'connected') newInput.onmidimessage = this.onMIDIMessage.bind(this);
+                }
+                if (type === 'output') {
+                    const newOutput = this.midi.outputs.get(id);
+                    // activate on connection
+                    if (newOutput && newOutput.state === 'connected') this.askChannel();
                 }
                 // Handle disconnection
                 if (event.port.state === 'disconnected' && this._isActive) {
@@ -152,7 +163,7 @@ class MIDIController {
         this.publish({
             type: 'error',
             'msg': message
-         });
+        });
     }
 
     // Handling MIDI Iputs
@@ -173,9 +184,17 @@ class MIDIController {
 
         if (command === 0xB0) {
             if (control === 20) {
-                // response to askChannel()
-                this._channel = channel;
-                if (!this._isActive) this.activate();
+                if (val === channel) {
+                    // response to askChannel()
+                    console.log("le channel numéro est", channel);
+                    this._channel = channel;
+                    if (!this._isActive) this.activate();
+                } else if (val === 1) {
+                    // response to activate demand
+                    // starts timer
+                    this.timer = Date.now();
+                    this.raf = window.requestAnimationFrame(this.ticTac.bind(this));
+                }
             }
             if (control === 21 && channel === this._channel) {
                 switch (val) {
@@ -191,12 +210,16 @@ class MIDIController {
                     case 30:
                         this._value -= 10;
                         break;
+                    case 40:
+                        if (channel === this._channel) {
+                            // Reset range value to initialValue
+                            this.value = this._initialValue;
+                        }
+                        break;
                 }
                 this.value = this._value;
-            }
-            if (control === 22 && channel === this._channel) {
-                // Reset range value to initialValue
-                this.value = this._initialValue;
+                // reinit timer
+                this.timer = Date.now();
             }
         }
         // this._target.value = this.value;
@@ -218,6 +241,16 @@ class MIDIController {
 
     isActive() {
         return this._isActive;
+    }
+
+    ticTac() {
+        const elapsed = Date.now() - this.timer;
+        if (elapsed > this.activeSensingPeriod) {
+            // Send an Active Sensing message
+            const message = [0xB0, 0x14, 0x40];
+            this.sendMIDIMsg(message);
+        }
+        window.requestAnimationFrame(this.ticTac.bind(this));
     }
 }
 
