@@ -18,8 +18,111 @@
             <li><a href="examples/example2.html">Ex #2</a></li>
             <li><a href="examples/example3.html">Ex #3</a></li>
         </ul>
-    </div>
 
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="4">Javascript</th>
+                    <th colspan="3">Arduino</th>
+                </tr>
+                <tr>
+                    <th>Command</th>
+                    <th>CC</th>
+                    <th>Value<br>(decimal)</th>
+                    <th>Value<br>(hex)</th>
+                    <th>CC</th>
+                    <th>Value<br>(decimal)</th>
+                    <th>Value<br>(hex)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Ask channel #</td>
+                    <td>20</td>
+                    <td>16</td>
+                    <td>0x10</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>20</td>
+                    <td>channel #</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Activate</td>
+                    <td>20</td>
+                    <td>32</td>
+                    <td>0x20</td>
+                    <td colspan="3"></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>20</td>
+                    <td>1</td>
+                    <td>0x1</td>
+                </tr>
+                <tr>
+                    <td>Desactivate</td>
+                    <td>20</td>
+                    <td>48</td>
+                    <td>0x30</td>
+                    <td colspan="3"></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td colspan="3"></td>
+                    <td colspan="3">no response</td>
+                </tr>
+                <tr>
+                    <td>+1</td>
+                    <td colspan="3"></td>
+                    <td>21</td>
+                    <td>1</td>
+                    <td>0x1</td>
+                </tr>
+                <tr>
+                    <td>-1</td>
+                    <td colspan="3"></td>
+                    <td>21</td>
+                    <td>3</td>
+                    <td>0x3</td>
+                </tr>
+                <tr>
+                    <td>+10</td>
+                    <td colspan="3"></td>
+                    <td>21</td>
+                    <td>10</td>
+                    <td>0xA</td>
+                </tr>
+                <tr>
+                    <td>-10</td>
+                    <td colspan="3"></td>
+                    <td>21</td>
+                    <td>30</td>
+                    <td>0x1E</td>
+                </tr>
+                <tr>
+                    <td>Reset</td>
+                    <td colspan="3"></td>
+                    <td>21</td>
+                    <td>40</td>
+                    <td>0x28</td>
+                </tr>
+            </tbody>
+        </table>
+
+
+
+    </div> <!-- end div.wrap -->
     <script type="module" src="./js/main.js"></script>
 </body>
 

@@ -103,18 +103,21 @@ class MIDIController {
 
     sendMIDIMsg(msg) {
         const output = this.filterIOs(this.midi.outputs);
-        if (this.midi && output) {
-            // add channel in LSB to command
-            msg[0] += this._channel;
-            output.send(msg);
-            // reinit timer
-            this.timer = Date.now();
-        } else {
-            const msg = "<b>No MIDI Controller connected</b>";
-            this.publish({
-                type: 'alert',
-                msg
-            });
+        if (this.midi) {
+            if (output) {
+                // add channel in LSB to command
+                msg[0] += this._channel;
+                console.log('message', msg);
+                output.send(msg);
+                // reinit timer
+                this.timer = Date.now();
+            } else {
+                const msg = "<b>No MIDI Controller connected</b>";
+                this.publish({
+                    type: 'alert',
+                    msg
+                });
+            }
         }
     }
 
@@ -136,7 +139,7 @@ class MIDIController {
                 }
                 if (type === 'output') {
                     const newOutput = this.midi.outputs.get(id);
-                    // activate on connection
+                    // ask a channel before activation
                     if (newOutput && newOutput.state === 'connected') this.askChannel();
                 }
                 // Handle disconnection
@@ -152,6 +155,7 @@ class MIDIController {
 
         window.addEventListener('pagehide', (event) => {
             // sends a message to desactivate the controller when the user is about to leave the page
+            this._isActive = false;
             this.desactivate();
         });
 
@@ -187,8 +191,12 @@ class MIDIController {
                 if (val === channel) {
                     // response to askChannel()
                     console.log("le channel numéro est", channel);
-                    this._channel = channel;
-                    if (!this._isActive) this.activate();
+                    if (this._channel === 0) {
+                        // every controller receives this message, but the real receiver is the one which doesn't have an intended channel number yet (his channel number is still 0)
+                        this._channel = channel;
+                        if (!this._isActive) this.activate();
+                        // this.raf = window.requestAnimationFrame(this.ticTac.bind(this));
+                    }
                 } else if (val === 1) {
                     // response to activate demand
                     // starts timer
@@ -244,13 +252,15 @@ class MIDIController {
     }
 
     ticTac() {
-        const elapsed = Date.now() - this.timer;
-        if (elapsed > this.activeSensingPeriod) {
-            // Send an Active Sensing message
-            const message = [0xB0, 0x14, 0x40];
-            this.sendMIDIMsg(message);
+        if (this._isActive){
+            const elapsed = Date.now() - this.timer;
+            if (elapsed > this.activeSensingPeriod) {
+                // Send an Active Sensing message
+                const message = [0xB0, 0x14, 0x40];
+                this.sendMIDIMsg(message);
+            }
+            window.requestAnimationFrame(this.ticTac.bind(this));
         }
-        window.requestAnimationFrame(this.ticTac.bind(this));
     }
 }
 
